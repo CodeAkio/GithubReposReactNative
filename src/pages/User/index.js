@@ -20,16 +20,33 @@ export default class User extends Component {
   // eslint-disable-next-line react/state-in-constructor
   state = {
     stars: [],
+    page: 1,
   };
 
   async componentDidMount() {
+    this.load();
+  }
+
+  load = async (page = 1) => {
     const {navigation} = this.props;
+    const {stars} = this.state;
     const user = navigation.getParam('user');
 
-    const response = await api.get(`/users/${user.login}/starred`);
+    const response = await api.get(`/users/${user.login}/starred`, {
+      params: {page},
+    });
 
-    this.setState({stars: response.data});
-  }
+    this.setState({
+      stars: page > 1 ? [...stars, ...response.data] : response.data,
+      page,
+    });
+  };
+
+  loadMore = () => {
+    const {page} = this.state;
+
+    this.load(page + 1);
+  };
 
   handleNavigate = repository => {
     const {navigation} = this.props;
@@ -51,6 +68,8 @@ export default class User extends Component {
         </Header>
 
         <Stars
+          onEndReachedThreshold={0.2}
+          onEndReached={this.loadMore}
           data={stars}
           keyExtractor={star => String(star.id)}
           renderItem={({item}) => (
