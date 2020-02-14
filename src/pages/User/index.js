@@ -23,6 +23,7 @@ export default class User extends Component {
     stars: [],
     page: 1,
     loading: true,
+    refreshing: false,
   };
 
   async componentDidMount() {
@@ -42,6 +43,7 @@ export default class User extends Component {
       stars: page > 1 ? [...stars, ...response.data] : response.data,
       page,
       loading: false,
+      refreshing: false,
     });
   };
 
@@ -57,9 +59,13 @@ export default class User extends Component {
     navigation.navigate('Repository', {repository});
   };
 
+  refreshList = () => {
+    this.setState({refreshing: true, stars: []}, this.load);
+  };
+
   render() {
     const {navigation} = this.props;
-    const {stars, loading} = this.state;
+    const {stars, loading, refreshing} = this.state;
     const user = navigation.getParam('user');
 
     return (
@@ -76,6 +82,8 @@ export default class User extends Component {
           <Stars
             onEndReachedThreshold={0.2}
             onEndReached={this.loadMore}
+            onRefresh={this.refreshList}
+            refreshing={refreshing}
             data={stars}
             keyExtractor={star => String(star.id)}
             renderItem={({item}) => (
